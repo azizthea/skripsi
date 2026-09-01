@@ -6,12 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Santri;
 use App\Models\Absensi;
 
-/**
- * AbsensiController
- * 
- * Mengelola operasi CRUD untuk data absensi harian santri.
- * Data absensi mencakup kehadiran pada kegiatan Pengajian dan Sekolah.
- */
+// AbsensiController
 class AbsensiController extends Controller
 {
     /**
@@ -221,12 +216,7 @@ class AbsensiController extends Controller
             ->with('success', "Berhasil menghapus {$deleted} record absensi{$categoryText} pada periode {$bulan}/{$tahun}.");
     }
 
-    /**
-     * IMPORT REKAP ABSENSI SEBAGAI FAKTA MENTAH
-     * 
-     * Sesuai alur Skripsi: Data absensi bulanan yang diunggah akan disimpan
-     * sebagai data absensi harian (fakta mentah) di tabel absensis.
-     */
+    // Import Rekap Absensi
     public function importRekap(Request $request)
     {
         $request->validate([
@@ -274,7 +264,7 @@ class AbsensiController extends Controller
                         $statusPengajian = ($hari <= $hadirPengajian) ? 'Hadir' : 'Alpa';
                         $statusSekolah   = ($hari <= $hadirSekolah) ? 'Hadir' : 'Alpa';
 
-                        // Simpan sebagai FAKTA MENTAH di tabel Absensi (Sesuai Skripsi)
+                        // Simpan data absensi
                         Absensi::updateOrCreate(
                             [
                                 'santri_id'      => $santri->id,

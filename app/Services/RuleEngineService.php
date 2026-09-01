@@ -12,6 +12,7 @@ class RuleEngineService
      * @param array $metrics
      * @return array
      */
+    // (+) Method Public: Evaluate Rules
     public function evaluateRules(array $metrics)
     {
         // 1. Load all active rules, sorted by priority (1 is highest)
@@ -28,22 +29,14 @@ class RuleEngineService
             
             if ($eval['is_matched']) {
                 $triggeredRules[] = [
-                    'id' => $rule->id,
-                    'nama_rule' => $rule->nama_rule,
-                    'prioritas' => $rule->prioritas,
-                    'hasil_kategori' => $rule->hasil_kategori,
-                    'trace' => $eval['trace'] // Include Explainability Trace
+                    'rule' => $rule,
+                    'trace' => $eval['trace']
                 ];
 
-                if (is_null($finalCategory)) {
+                if (!$finalCategory) {
                     $finalCategory = $rule->hasil_kategori;
                 }
             }
-        }
-
-        // Default fallback if no rules matched
-        if (is_null($finalCategory)) {
-            $finalCategory = 'Kurang Disiplin';
         }
 
         return [
@@ -52,9 +45,7 @@ class RuleEngineService
         ];
     }
 
-    /**
-     * Mem-parsing dan mengevaluasi JSON Multi-Condition dan mengembalikan Trace Explainability
-     */
+    // (-) Method Private: Evaluate JSON Condition
     private function evaluateJsonCondition(array $metrics, array $json)
     {
         $logic = $json['logic'] ?? 'AND';
@@ -96,9 +87,7 @@ class RuleEngineService
         return ['is_matched' => $finalMatch, 'trace' => $trace];
     }
 
-    /**
-     * Operator komparasi logika
-     */
+    // (-) Method Private: Compare Operator
     private function compare($actual, $operator, $target)
     {
         switch ($operator) {

@@ -4,38 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Model Evaluasi
- * 
- * Merepresentasikan hasil evaluasi klasifikasi kedisiplinan santri
- * untuk satu periode (bulan/tahun). Menyimpan persentase kehadiran
- * dan kategori disiplin yang dihasilkan oleh Forward Chaining.
- */
+// Model Evaluasi
 class Evaluasi extends Model
 {
+    // (#) Atribut Protected (Sesuai deklarasi protected $fillable di kode)
     protected $fillable = [
         'santri_id',
         'bulan',
         'tahun',
-        // Audit trail: data mentah
         'total_hadir_pengajian',
         'total_hari_pengajian',
         'total_hadir_sekolah',
         'total_hari_sekolah',
-        // Hasil perhitungan
         'persentase_pengajian',
         'persentase_sekolah',
-        // Hasil klasifikasi
-        'kategori_disiplin',    // Enum: 'Tinggi', 'Sedang', 'Rendah'
-        'triggered_rule',       // Nama rule yang terpicu
-        // Tracking EWS
+        'kategori_disiplin',
+        'triggered_rule',
         'is_sent_to_bk',
         'is_sent_to_pengurus',
     ];
 
-    /**
-     * Relasi: Evaluasi milik satu Santri
-     */
+    // (+) Method Public: Relasi Santri
     public function santri()
     {
         return $this->belongsTo(Santri::class);

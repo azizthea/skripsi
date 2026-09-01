@@ -4,7 +4,7 @@
 <div style="max-width: 1100px;">
 
     {{-- ══════════════════════════════════════
-         HEADER
+        HEADER
     ══════════════════════════════════════ --}}
     <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1.5rem; margin-bottom:2rem;">
         <div>
@@ -21,7 +21,7 @@
 
         {{-- Filter Periode --}}
         <form action="{{ route('dashboard') }}" method="GET"
-              style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
             <select name="bulan" class="org-input" style="width:auto; min-width:130px;">
                 @for($i = 1; $i <= 12; $i++)
                     <option value="{{ str_pad($i,2,'0',STR_PAD_LEFT) }}" {{ $bulan == $i ? 'selected' : '' }}>
@@ -41,7 +41,7 @@
     </div>
 
     {{-- ══════════════════════════════════════
-         EWS CARD — PRIORITAS KONSELING
+        EWS CARD — PRIORITAS KONSELING
     ══════════════════════════════════════ --}}
     <div class="org-card" style="margin-bottom:1.75rem;">
         {{-- Card Header --}}
@@ -308,6 +308,23 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(refreshLiveFeed, 5000);
     setInterval(refreshLiveFeed, 30000);
 
+    function formatPersen(val) {
+        if (!val) return '0%';
+        let numStr = val.toString().replace('%', '').trim();
+        let num = parseFloat(numStr);
+        if (isNaN(num)) return val;
+        if (num % 1 === 0) {
+            return num.toFixed(0) + '%';
+        }
+        let formatted = num.toFixed(2);
+        if (formatted.endsWith('.00')) {
+            formatted = num.toFixed(0);
+        } else if (formatted.endsWith('0')) {
+            formatted = num.toFixed(1);
+        }
+        return formatted.replace('.', ',') + '%';
+    }
+
     // ── Modal: Auto-fill draft pesan ──
     const modalKonseling = document.getElementById('modalKonseling');
     if (modalKonseling) {
@@ -318,17 +335,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const persentase = btn.getAttribute('data-persentase');
             const link       = btn.getAttribute('data-link');
 
+            const formattedPersen = formatPersen(persentase);
+
             const draft =
-`Assalamu'alaikum, Ustadz/Ustadzah Wali Kelas ${kelas}.
+`*Assalamu'alaikum, Ustadz/Ustadzah Wali Kelas ${kelas}.*
 
-Mohon bantuannya untuk mengarahkan santri bernama *${nama}* agar menghadap ke Ruang BK pada waktu istirahat hari ini.
+Mohon bantuannya untuk mengarahkan santri berikut:
 
-Tingkat kehadiran sekolahnya saat ini sangat rendah (*${persentase}%* — Zona Waspada) dan membutuhkan sesi konseling segera.
+👤 *Nama:* ${nama}
+📚 *Kelas:* ${kelas}
+📊 *Kehadiran Sekolah:* ${formattedPersen}
+⚠️ *Status:* Zona Waspada
 
-Lampiran Hasil Evaluasi (PDF) dapat diakses di tautan berikut sebagai bukti:
+Mohon santri tersebut diarahkan untuk *menghadap ke Ruang BK saat waktu istirahat hari ini* untuk mendapatkan tindak lanjut dan konseling.
+
+📎 *Hasil Evaluasi:*
 ${link}
 
-Terima kasih atas kerja samanya.`;
+Terima kasih atas kerja samanya.
+
+*Wassalamu'alaikum.*`;
 
             document.getElementById('waMessageText').value = draft;
         });
@@ -358,13 +384,60 @@ function sendWhatsApp() {
     const msg   = document.getElementById('waMessageText').value;
 
     if (!phone) {
-        alert('Silakan masukkan nomor WhatsApp tujuan terlebih dahulu.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Nomor Belum Diisi',
+            text: 'Silakan masukkan nomor WhatsApp tujuan terlebih dahulu.',
+            confirmButtonColor: '#059669'
+        });
         return;
     }
     phone = phone.replace(/\D/g, '');
     if (phone.startsWith('0')) phone = '62' + phone.substring(1);
 
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    // Tutup modal bootstrap
+    const modalEl = document.getElementById('modalKonseling');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    // Tampilkan loading
+    Swal.fire({
+        title: 'Mengirim Pesan...',
+        html: `Mengirimkan pesan ke <strong>+${phone}</strong>...`,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    // Panggil Fonnte API langsung dari browser (lebih cepat)
+    const formData = new FormData();
+    formData.append('target', phone);
+    formData.append('message', msg);
+    formData.append('countryCode', '62');
+
+    fetch('https://api.fonnte.com/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Eb7QCv1ycJSNTKmexzb7'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === true) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pesan Berhasil Terkirim!',
+                html: `Pesan undangan konseling telah dikirimkan ke nomor <strong>+${phone}</strong> tanpa perlu berpindah aplikasi.`,
+                confirmButtonColor: '#059669'
+            });
+        } else {
+            Swal.fire('Gagal', 'Gateway menolak permintaan: ' + (data.reason || 'Pastikan perangkat Fonnte aktif.'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Gagal menghubungi server Fonnte. Periksa koneksi internet.', 'error');
+    });
 }
 
 function confirmSelesai(id, nama) {

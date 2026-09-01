@@ -5,20 +5,7 @@ namespace App\Services;
 use App\Models\Evaluasi;
 use App\Models\Absensi;
 
-/**
- * =============================================================================
- * BackwardChainingService
- * =============================================================================
- * 
- * Service class yang mengimplementasikan metode Rule-Based System
- * dengan teknik Backward Chaining.
- * 
- * BACKWARD CHAINING PROCESS:
- * 1. Menetapkan Goal / Hipotesis (Contoh: "Mengapa santri ini tidak disiplin? 
- *    Apakah karena sakit? Apakah karena malas di kelas tertentu?")
- * 2. Melacak ke belakang (Backward) untuk mengecek fakta-fakta yang ada (data absensi).
- * 3. Jika fakta mendukung hipotesis, maka hipotesis terbukti benar.
- */
+// BackwardChainingService
 class BackwardChainingService
 {
     /**

@@ -142,9 +142,7 @@ class RuangController extends Controller
             ->with('success', $count . ' santri berhasil ditempatkan ke ruangan "' . $request->nama_ruang . '" dengan wali "' . $request->wali_kelas . '".');
     }
 
-    /**
-     * Legacy assign (tetap dipertahankan untuk backward compatibility).
-     */
+    // Legacy assign
     public function assign(Request $request)
     {
         $request->validate([

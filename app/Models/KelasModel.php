@@ -4,17 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Model Kelas (KelasModel)
- * 
- * SKALABILITAS: Model ini berfungsi sebagai master data kelas.
- * Pengurus pesantren dapat menambah kelas baru kapan saja melalui 
- * antarmuka admin. Setiap kelas yang ditambah akan otomatis muncul
- * sebagai pilihan dropdown pada form registrasi santri.
- * 
- * Menggunakan nama class KelasModel untuk menghindari konflik
- * dengan reserved word 'class' di PHP.
- */
+// Model KelasModel
 class KelasModel extends Model
 {
     protected $table = 'classes';

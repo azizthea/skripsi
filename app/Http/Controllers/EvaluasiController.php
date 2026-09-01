@@ -9,16 +9,7 @@ use App\Models\Absensi;
 use App\Services\ForwardChainingService;
 use App\Services\BackwardChainingService;
 
-/**
- * EvaluasiController
- * 
- * Mengelola proses evaluasi klasifikasi kedisiplinan santri.
- * Fitur utama:
- * - Menampilkan hasil evaluasi (laporan) dengan filter Kelas/Kamar
- * - Tombol "Proses Evaluasi" untuk menjalankan Forward Chaining
- * - Tombol "Reset Evaluasi" untuk membatalkan evaluasi bulanan
- * - Export ke PDF (rekap semua & laporan individu per santri)
- */
+// EvaluasiController
 class EvaluasiController extends Controller
 {
     /**
@@ -44,7 +35,7 @@ class EvaluasiController extends Controller
             $kTrim = trim($kelasFilter);
             $query->whereHas('santri', function ($q) use ($kTrim) {
                 $q->where('kelas', $kTrim)
-                  ->orWhere(\Illuminate\Support\Facades\DB::raw('TRIM(kelas)'), $kTrim);
+                ->orWhere(\Illuminate\Support\Facades\DB::raw('TRIM(kelas)'), $kTrim);
             });
         }
 
@@ -54,8 +45,8 @@ class EvaluasiController extends Controller
             $query->whereHas('santri', function ($q) use ($kamarTrim) {
                 $q->where(function ($sq) use ($kamarTrim) {
                     $sq->where('ruang_pengajian', $kamarTrim)
-                       ->orWhere('kamar', $kamarTrim)
-                       ->orWhere(\Illuminate\Support\Facades\DB::raw('TRIM(ruang_pengajian)'), $kamarTrim);
+                ->orWhere('kamar', $kamarTrim)
+                ->orWhere(\Illuminate\Support\Facades\DB::raw('TRIM(ruang_pengajian)'), $kamarTrim);
                 });
             });
         }
@@ -499,18 +490,7 @@ class EvaluasiController extends Controller
             }
         }
 
-        // -------------------------------------------------------------------
-        // LANGKAH 7: Penggabungan Data Fakta & Data Konfigurasi (Integrasi Sistem)
-        // 
-        // Bagian ini sangat penting dalam arsitektur sistem (khususnya untuk
-        // keperluan laporan Sidang Skripsi). Di sini terjadi penggabungan:
-        // 1. Data Fakta: Merupakan data mentah absensi (fakta empiris) dan 
-        //    hasil perhitungan evaluasi (fakta inferensi/klasifikasi).
-        // 2. Data Konfigurasi: Merupakan parameter sistem (identitas pondok, 
-        //    yayasan, logo) yang bersifat dinamis.
-        // Dengan menggabungkan keduanya, laporan PDF yang dihasilkan tidak
-        // hard-coded, melainkan sepenuhnya merepresentasikan kondisi sistem terkini.
-        // -------------------------------------------------------------------
+        // Penggabungan Data Fakta & Data Konfigurasi
         $namaYayasanId = \App\Models\Setting::getVal('nama_yayasan_id', 'YAYASAN PENDIDIKAN AL-FURQONIYAH');
         $namaPondokAr = \App\Models\Setting::getVal('nama_pondok_ar', 'معهد الفرقانية الإسلامي');
         $namaPondokId = \App\Models\Setting::getVal('nama_pondok_id', 'Pondok Pesantren Alfurqoniyah');
@@ -546,9 +526,7 @@ class EvaluasiController extends Controller
     }
 
 
-    /**
-     * Helper: Daftar nama hari dalam bahasa Indonesia
-     */
+    // (-) Method Private: Helper Nama Hari
     private function getNamaHari(int $dayOfWeek): string
     {
         $hari = [
@@ -558,9 +536,7 @@ class EvaluasiController extends Controller
         return $hari[$dayOfWeek] ?? '-';
     }
 
-    /**
-     * Helper: Daftar nama bulan dalam bahasa Indonesia
-     */
+    // (-) Method Private: Helper Nama Bulan
     private function getNamaBulan(): array
     {
         return [

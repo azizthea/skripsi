@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'role:admin,bk,pengurus'])->group(function () {
     Route::post('/setting/list/delete', [SettingController::class, 'destroyList'])->name('setting.list.destroy');
 
     // Master Data: Kelas
+    Route::post('/whatsapp/send', [WhatsAppController::class, 'sendNotification'])->name('whatsapp.send');
     Route::post('/kelas', [KelasController::class, 'store'])->name('kelas.store');
     Route::put('/kelas/{id}', [KelasController::class, 'update'])->name('kelas.update');
     Route::delete('/kelas/{id}', [KelasController::class, 'destroy'])->name('kelas.destroy');

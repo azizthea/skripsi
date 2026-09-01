@@ -303,6 +303,23 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(refreshLiveFeed, 5000);
     setInterval(refreshLiveFeed, 30000);
 
+    function formatPersen(val) {
+        if (!val) return '0%';
+        let numStr = val.toString().replace('%', '').trim();
+        let num = parseFloat(numStr);
+        if (isNaN(num)) return val;
+        if (num % 1 === 0) {
+            return num.toFixed(0) + '%';
+        }
+        let formatted = num.toFixed(2);
+        if (formatted.endsWith('.00')) {
+            formatted = num.toFixed(0);
+        } else if (formatted.endsWith('0')) {
+            formatted = num.toFixed(1);
+        }
+        return formatted.replace('.', ',') + '%';
+    }
+
     // ── Modal: Auto-fill draft ──
     const modalPanggil = document.getElementById('modalPanggil');
     if (modalPanggil) {
@@ -313,17 +330,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const alpa  = btn.getAttribute('data-alpa'); // Ini sekarang persentase (misal: 60%)
             const link  = btn.getAttribute('data-link');
 
+            const formattedPersen = formatPersen(alpa);
+
             const draft =
-`Assalamu'alaikum, Akhi/Ukhti Pengurus Kamar ${kamar}.
+`*Assalamu'alaikum, Akhi/Ukhti Pengurus Kamar ${kamar}.*
 
-Mohon bantuannya untuk memanggil santri bernama *${nama}* agar menghadap ke Kantor Pengasuhan segera.
+Mohon bantuannya untuk mengarahkan santri berikut:
 
-Berdasarkan hasil evaluasi sistem terpusat, tingkat kehadiran pengajian yang bersangkutan sangat mengkhawatirkan (*${alpa}* di bulan ini) dan berada di bawah standar. Mohon segera diarahkan untuk pembinaan.
+👤 *Nama:* ${nama}
+🏡 *Kamar:* ${kamar}
+📊 *Kehadiran Pengajian:* ${formattedPersen}
+⚠️ *Status:* Zona Waspada
 
-Lampiran Hasil Evaluasi (PDF) dapat diakses di tautan berikut sebagai bukti otentik:
+Mohon santri tersebut diarahkan untuk *menghadap ke Kantor Pengasuhan segera* untuk mendapatkan pembinaan dan tindak lanjut.
+
+📎 *Hasil Evaluasi:*
 ${link}
 
-Syukron jazakumullah khairan atas kerja samanya.`;
+Syukron jazakumullah khairan atas kerja samanya.
+
+*Wassalamu'alaikum.*`;
 
             document.getElementById('waMessageTextPengurus').value = draft;
         });
@@ -349,10 +375,61 @@ Syukron jazakumullah khairan atas kerja samanya.`;
 function sendWhatsAppPengurus() {
     let phone = document.getElementById('waPhoneNumberPengurus').value;
     const msg = document.getElementById('waMessageTextPengurus').value;
-    if (!phone) { alert('Silakan masukkan nomor WhatsApp tujuan terlebih dahulu.'); return; }
+    if (!phone) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Nomor Belum Diisi',
+            text: 'Silakan masukkan nomor WhatsApp tujuan terlebih dahulu.',
+            confirmButtonColor: '#059669'
+        });
+        return;
+    }
     phone = phone.replace(/\D/g, '');
     if (phone.startsWith('0')) phone = '62' + phone.substring(1);
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+
+    // Tutup modal bootstrap
+    const modalEl = document.getElementById('modalPanggil');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    // Tampilkan loading
+    Swal.fire({
+        title: 'Mengirim Pesan...',
+        html: `Mengirimkan pesan ke <strong>+${phone}</strong>...`,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    // Panggil Fonnte API langsung dari browser (lebih cepat)
+    const formData = new FormData();
+    formData.append('target', phone);
+    formData.append('message', msg);
+    formData.append('countryCode', '62');
+
+    fetch('https://api.fonnte.com/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Eb7QCv1ycJSNTKmexzb7'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === true) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Pesan Berhasil Terkirim!',
+                html: `Pesan pemanggilan santri telah dikirimkan ke nomor <strong>+${phone}</strong> tanpa perlu berpindah aplikasi.`,
+                confirmButtonColor: '#059669'
+            });
+        } else {
+            Swal.fire('Gagal', 'Gateway menolak permintaan: ' + (data.reason || 'Pastikan perangkat Fonnte aktif.'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Gagal menghubungi server Fonnte. Periksa koneksi internet.', 'error');
+    });
 }
 
 function confirmSelesai(id, nama) {
